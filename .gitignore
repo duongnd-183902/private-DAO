@@ -12,3 +12,4 @@ artifacts
 
 # Circuit file
 build/*/**
+!.gitkeep
