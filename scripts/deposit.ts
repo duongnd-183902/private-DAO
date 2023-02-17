@@ -1,9 +1,8 @@
 import { ethers } from "hardhat";
 import * as snarkjs from "snarkjs";
-import * as circomlib from "circomlib"
+const circomlib = require('circomlib')
 const MerkleTree = require('fixed-merkle-tree')
 const bigInt = snarkjs.bigInt
-const unstringifyBigInts2 = require('snarkjs/src/stringifybigint').unstringifyBigInts
 const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(ethers.utils.randomBytes(nbytes))
 const pedersenHash = (data) => circomlib.babyJub.unpackPoint(circomlib.pedersenHash.hash(data))[0]
 const toFixedHex = (number, length = 32) =>
@@ -37,11 +36,7 @@ function BNArrayToStringArray(array) {
   return arrayToPrint
 }
 
-function snarkVerify(proof) {
-  proof = unstringifyBigInts2(proof)
-  const verification_key = unstringifyBigInts2(require('../build/circuits/withdraw_verification_key.json'))
-  return snarkjs['groth'].isValid(verification_key, proof, proof.publicSignals)
-}
+
 
 async function main() {
     /**

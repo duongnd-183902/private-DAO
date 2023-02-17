@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import byte from "./bytes"
+import byte from "../utils/bytecodeMIMC"
 
 
 
@@ -44,7 +44,7 @@ async function main() {
     console.log("MiMCSpong contract address: ", MiMCSponge.address);
     console.log("Verify contract address: ", Verify.address);
     console.log("ETHTornado contract address: ", ETHTornado.address);
-    await balances()
+    await balances();
 }
 
 

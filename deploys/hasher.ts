@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import byte from "./bytes"
+import byte from "../utils/bytecodeMIMC"
 
 async function main() {
     /**
@@ -18,7 +18,7 @@ async function main() {
     const abi = ["function MiMCSponge(uint256 , uint256 ) external pure returns (uint256 , uint256 )"];
 
     let hasher = await ethers.getContractAt(abi,hasherAddr);
-    console.log(hasher)
+    console.log('MiMCSpong hash address: ', hasher.address);
     
 }
 

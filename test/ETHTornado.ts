@@ -2,7 +2,8 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import byte from "../scripts/bytes"
+import byte from "../utils/bytecodeMIMC"
+
 
 describe("ETH Tornado Cash", function (){
     async function deployETHTornadoFixture() {

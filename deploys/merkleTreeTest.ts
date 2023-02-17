@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import byte from "./bytes"
+import byte from "../utils/bytecodeMIMC"
 
 async function main() {
     /**
@@ -29,10 +29,6 @@ async function main() {
     await merkleTree.deployed();
 
     console.log("MerkleTree address:", merkleTree.address)
-
-    const zeroValue = await merkleTree.ZERO_VALUE()
-    const firstSubtree = await merkleTree.filledSubtrees(0)
-    console.log(zeroValue,ethers.BigNumber.from(firstSubtree))
 }
 
 main()
