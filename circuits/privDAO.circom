@@ -2,7 +2,7 @@ pragma circom 2.1.3;
 
 include "../node_modules/circomlib/circuits/pedersen.circom";
 include "../node_modules/circomlib/circuits/escalarmulany.circom";
-include "./merkleTree.circom";
+include "merkleTree.circom";
 
 template CommitmentHasher(){
     signal input p[2];
@@ -67,11 +67,12 @@ template Withdrawi(levels) {
 
     component tree = MerkleTreeChecker(levels);
     tree.leaf <== hasher.commitment;
-    tree.root <== root;
     for (var i = 0; i < levels; i++) {
         tree.pathElements[i] <== pathElements[i];
         tree.pathIndices[i] <== pathIndices[i];
     }
+
+    root === tree.out;
 }
 
 template Withdraw(levels){
@@ -80,10 +81,18 @@ template Withdraw(levels){
     signal input p[10][2];
     signal input q[10][2];
     signal input v[10];
+    signal input w;
     signal input pathElements[10][levels];
     signal input pathIndices[10][levels];
+    signal input recipient; 
 
+    var sumV = 0;
+    for (var i = 0; i < 10; i++){
+        sumV += v[i];
+    }
     
+    w === sumV;
+
     component withdraw0 = Withdrawi(levels);
     withdraw0.root <== root;
     withdraw0.alpha <== alpha;
@@ -193,6 +202,12 @@ template Withdraw(levels){
     withdraw9.v <== v[9];
     withdraw9.pathElements <== pathElements[9];
     withdraw9.pathIndices <== pathIndices[9];
+
+    // Add hidden signals to make sure that tampering with recipient or fee will invalidate the snark proof
+    // Most likely it is not required, but it's better to stay on the safe side and it only takes 2 constraints
+    // Squares are used to prevent optimizer from removing those constraints
+    signal recipientSquare;
+    recipientSquare <== recipient * recipient;
 }
 
-component main {public [root, p, q, v]} = Withdraw(12);
+component main {public [root, p, q, v, w, recipient]} = Withdraw(12);
