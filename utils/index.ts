@@ -61,14 +61,6 @@ function generateDeposit() {
   deposit.commitment = pedersenHash(preimage)
   return deposit
 }
-
 // eslint-disable-next-line no-unused-vars
-function BNArrayToStringArray(array) {
-  const arrayToPrint = []
-  array.forEach((item) => {
-    arrayToPrint.push(item.toString())
-  })
-  return arrayToPrint
-}
 
 export {MerkleTree, pedersenHash, toFixedHex, stringifyBigInts, generateDeposit, Commit};
