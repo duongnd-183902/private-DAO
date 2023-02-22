@@ -1,0 +1,1 @@
+snarkjs zkey export solidityverifier ./circuits/resource/privDAO_0001.zkey ../contracts/Mocks/verifier.sol
