@@ -12,7 +12,7 @@ const verification_key = dirnameScripts + '/build/circuits/withdraw_cpp/verifica
 
 
 
-const witnessFileName = witnessBaseDir + 'hihi.wtns';
+const witnessFileName = witnessBaseDir + '0.wtns';
 const levels: number = 12;
 let Tree: utils.MerkleTree = new utils.MerkleTree(levels);
 
@@ -73,4 +73,5 @@ async function hihi() {
     }
 }
 
-hihi();
+// hihi();
+// main();

@@ -1,82 +1,59 @@
-import { ethers } from "hardhat";
 import * as snarkjs from "snarkjs";
-const circomlib = require('circomlib')
-const MerkleTree = require('fixed-merkle-tree')
-const bigInt = snarkjs.bigInt
-const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(ethers.utils.randomBytes(nbytes))
-const pedersenHash = (data) => circomlib.babyJub.unpackPoint(circomlib.pedersenHash.hash(data))[0]
-const toFixedHex = (number, length = 32) =>
-  '0x' +
-  bigInt(number)
-    .toString(16)
-    .padStart(length * 2, '0')
-const websnarkUtils = require('websnark/src/utils')
-const buildGroth16 = require('websnark/src/groth16')
-const stringifyBigInts = require('websnark/tools/stringifybigint').stringifyBigInts
-const getRandomRecipient = () => rbigint(20)
-let tree;
+import * as utils from "../utils/index"
+import { ethers } from "hardhat";
+import * as fs from "fs";
+import * as path from "path"
+
+const dirnameScripts = path.dirname(__dirname);
+const inputBaseDir = dirnameScripts + '/build/input/';
+const witnessBaseDir = dirnameScripts + '/build/witness/';
+const zkeyFileName = dirnameScripts + '/build/circuits/withdraw_cpp/withdraw_0001.zkey';
+const verification_key = dirnameScripts + '/build/circuits/withdraw_cpp/verification_key.json';
 
 
-function generateDeposit() {
-  let deposit: any = {
-    secret: rbigint(31),
-    nullifier: rbigint(31),
-  }
-  const preimage = Buffer.concat([deposit.nullifier.leInt2Buff(31), deposit.secret.leInt2Buff(31)])
-  deposit.commitment = pedersenHash(preimage)
-  return deposit
+
+const witnessFileName = witnessBaseDir + '0.wtns';
+const levels: number = 12;
+let Tree: utils.MerkleTree = new utils.MerkleTree(levels);
+
+function sampleInput(fee: string, refund: string, recipient: string, relayer: string, deposit: utils.Commit, index: number) {
+    Tree.insert(deposit.commitment)
+    const { pathElements, pathIndices } = Tree.path(index);
+
+    const input = utils.stringifyBigInts({
+        root: Tree.root(),
+        nullifierHash: utils.pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        nullifier: deposit.nullifier,
+        relayer: relayer,
+        recipient,
+        fee,
+        refund,
+        secret: deposit.secret,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
+        })
+    let absPath = inputBaseDir + index.toString() + '.json';
+    fs.promises.writeFile(absPath, JSON.stringify(input), 'utf8');
 }
-
-// eslint-disable-next-line no-unused-vars
-function BNArrayToStringArray(array) {
-  const arrayToPrint = []
-  array.forEach((item) => {
-    arrayToPrint.push(item.toString())
-  })
-  return arrayToPrint
-}
-
 
 
 async function main() {
-    /**
-         * owner: own merkle tree 
-         * MA: manager A
-         * MB: manager B
-         * C1: contribute partner 1
-         * C2: contribute partner 2
-         * C3: contribute partner 3
-         */
-    const [owner, MA,MB,C1,C2,C3 ] = await ethers.getSigners();
-    const levels = 12;
-    tree = new MerkleTree(levels)
-    const fee = bigInt(1e17)
-    const refund = bigInt(0)
-    const recipient = getRandomRecipient()
-    const relayer = MA
-    const groth16 = await buildGroth16()
+    const { proof, publicSignals } = await snarkjs.groth16.prove(zkeyFileName, witnessFileName);
+    
+    console.log("Proof: ");
+    console.log(JSON.stringify(proof, null, 1));
+    
+    const vKey = JSON.parse((fs.readFileSync(verification_key)).toString());
+    
+    const res = await snarkjs.groth16.verify(vKey, publicSignals, proof);
+    
+    if (res === true) {
+        console.log("Verification OK");
+    } else {
+        console.log("Invalid proof");
+    }
 
-
-    const deposit = generateDeposit()
-    tree.insert(deposit.commitment)
-    const { pathElements, pathIndices } = tree.path(0)
-
-    const input = stringifyBigInts({
-    root: tree.root(),
-    nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
-    nullifier: deposit.nullifier,
-    relayer: owner.address,
-    recipient,
-    fee,
-    refund,
-    secret: deposit.secret,
-    pathElements: pathElements,
-    pathIndices: pathIndices,
-    })
-
-    // let proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-    // const originalProof = JSON.parse(JSON.stringify(proofData))
-    // let result = snarkVerify(proofData)
-    console.log(input);
+    const s = await snarkjs.groth16.exportSolidityCallData(proof,publicSignals);
+    console.log('Solidity params: ',s);
+    process.exit(0);
 }
-main()
