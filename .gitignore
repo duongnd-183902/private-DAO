@@ -11,5 +11,5 @@ cache
 artifacts
 
 # Circuit file
-build/*/**
+build/**/**
 !.gitkeep
