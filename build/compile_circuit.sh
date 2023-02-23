@@ -1,3 +1,3 @@
-export file_path=privDAO
-mkdir -p ./circuits/$file_path
-circom ../circuits/privDAO.circom --r1cs --c -o ./circuits/$file_path
+export circuits_name=tornadoUpgrade
+mkdir -p ./circuits/$circuits_name
+circom ../circuits/$circuits_name.circom --r1cs --c -o ./circuits/$circuits_name
